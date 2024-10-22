@@ -1,7 +1,6 @@
 
 name: spora
 
-# Controls when the workflow will run
 on:
   push:
     branches:
@@ -14,21 +13,25 @@ jobs:
   build:
     name: spora test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      CONDA_OVERRIDE_CUDA: "11.8"
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.8"]
+        python-version: ["3.9"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - if: runner.os == 'Linux'
+        run: sudo apt-get -y update && sudo apt-get install -y libgl1-mesa-dev libglfw3-dev
       - uses: conda-incubator/setup-miniconda@v2
         with:
           environment-file: environments/environment.yml
           activate-environment: ncov_spora
           channels: conda-forge,bioconda,defaults,r
-          mamba-version: "*" 
-      - uses: actions/setup-python@v4
-        with: 
-          python-version: ${{ matrix.python-version }}
+          miniconda-version: "latest"
       - name: Install spora
         run: pip install .
       - name: Check spora version
